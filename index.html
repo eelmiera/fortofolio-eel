@@ -1,0 +1,2011 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eel's Map - Your Travel Companion</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+        body {
+            box-sizing: border-box;
+        }
+        
+        .parallax {
+            background-attachment: fixed;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+        
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+        
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .carousel-container {
+            overflow: hidden;
+        }
+        
+        .carousel-track {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+        
+        .carousel-slide {
+            min-width: 100%;
+            flex-shrink: 0;
+        }
+        
+        .chatbot {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .chatbot-window {
+            display: none;
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 300px;
+            height: 400px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 1001;
+        }
+        
+        .dark-mode {
+            background-color: #2d1b2e;
+            color: #f8d7da;
+        }
+        
+        .dark-mode .bg-white {
+            background-color: #4a2c4a !important;
+            color: #f8d7da;
+        }
+        
+        .dark-mode .text-gray-800 {
+            color: #f8d7da !important;
+        }
+        
+        .dark-mode .text-gray-600 {
+            color: #e8b4cb !important;
+        }
+        
+        .virtual-tour {
+            position: relative;
+            height: 400px;
+            background: linear-gradient(45deg, #93c5fd, #3b82f6);
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: grab;
+        }
+        
+        .virtual-tour:active {
+            cursor: grabbing;
+        }
+        
+        .weather-widget {
+            background: linear-gradient(135deg, #93c5fd, #3b82f6);
+            border-radius: 20px;
+            padding: 20px;
+            color: white;
+            text-align: center;
+        }
+        
+        .blue-gradient {
+            background: linear-gradient(135deg, #dbeafe, #93c5fd);
+        }
+        
+        .blue-card {
+            background: linear-gradient(135deg, #f0f9ff, #dbeafe);
+            border: 2px solid #93c5fd;
+        }
+        
+        .floating-hearts {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        
+        .heart {
+            position: absolute;
+            font-size: 20px;
+            color: #93c5fd;
+            animation: float 6s infinite linear;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .travel-planner {
+            background: linear-gradient(135deg, #f0f9ff, #93c5fd);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        
+        .budget-calculator {
+            background: linear-gradient(135deg, #dbeafe, #3b82f6);
+            color: white;
+            border-radius: 20px;
+            padding: 25px;
+        }
+        
+        .itinerary-builder {
+            background: linear-gradient(135deg, #f0f9ff, #93c5fd);
+            border-radius: 20px;
+            padding: 25px;
+        }
+        
+        .travel-tips {
+            background: linear-gradient(135deg, #dbeafe, #93c5fd);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 15px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+        }
+
+        .food-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .food-card {
+            background: linear-gradient(135deg, #f0f9ff, #dbeafe);
+            border: 2px solid #93c5fd;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .food-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="font-sans bg-gradient-to-br from-blue-50 to-blue-100"><!-- Floating Hearts Animation -->
+  <div class="floating-hearts" id="floating-hearts"></div><!-- Header/Navbar -->
+  <nav class="bg-white/90 backdrop-blur-sm shadow-lg fixed w-full top-0 z-50 transition-all duration-300 border-b-2 border-blue-200">
+   <div class="max-w-7xl mx-auto px-4">
+    <div class="flex justify-between items-center py-4">
+     <div class="flex items-center space-x-4">
+      <h1 class="text-3xl font-bold text-blue-600" id="site-title">🗺️ Eel's Map</h1>
+      <div class="hidden md:flex space-x-6"><a href="#home" class="text-blue-700 hover:text-blue-500 transition-colors font-medium">🏠 Home</a> <a href="#destinations" class="text-blue-700 hover:text-blue-500 transition-colors font-medium">🏝️ Destinations</a> <a href="#planner" class="text-blue-700 hover:text-blue-500 transition-colors font-medium">📋 Planner</a> <a href="#gallery" class="text-blue-700 hover:text-blue-500 transition-colors font-medium">📸 Gallery</a> <a href="#blog" class="text-blue-700 hover:text-blue-500 transition-colors font-medium">📝 Blog</a> <a href="#contact" class="text-blue-700 hover:text-blue-500 transition-colors font-medium">💌 Contact</a>
+      </div>
+     </div>
+     <div class="flex items-center space-x-4"><!-- Search Bar -->
+      <div class="relative hidden md:block"><input type="text" placeholder="🔍 Search destinations..." class="pl-4 pr-4 py-2 border-2 border-blue-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-blue-50">
+      </div><!-- Language Switcher --> <select id="language-switcher" class="border-2 border-blue-200 rounded-full px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-blue-50"> <option value="en">🇺🇸 English</option> <option value="id">🇮🇩 Bahasa Indonesia</option> </select> <!-- Dark Mode Toggle --> <button id="dark-mode-toggle" class="p-2 rounded-full hover:bg-blue-100 transition-colors"> <span class="text-2xl">🌙</span> </button> <!-- Mobile Menu --> <button id="mobile-menu-toggle" class="md:hidden p-2"> <span class="text-2xl">🍔</span> </button>
+     </div>
+    </div>
+   </div><!-- Mobile Menu -->
+   <div id="mobile-menu" class="hidden md:hidden bg-white/95 backdrop-blur-sm border-t-2 border-blue-200">
+    <div class="px-4 py-2 space-y-2"><a href="#home" class="block py-2 text-blue-700 hover:text-blue-500 font-medium">🏠 Home</a> <a href="#destinations" class="block py-2 text-blue-700 hover:text-blue-500 font-medium">🏝️ Destinations</a> <a href="#planner" class="block py-2 text-blue-700 hover:text-blue-500 font-medium">📋 Planner</a> <a href="#gallery" class="block py-2 text-blue-700 hover:text-blue-500 font-medium">📸 Gallery</a> <a href="#blog" class="block py-2 text-blue-700 hover:text-blue-500 font-medium">📝 Blog</a> <a href="#contact" class="block py-2 text-blue-700 hover:text-blue-500 font-medium">💌 Contact</a>
+    </div>
+   </div>
+  </nav><!-- Hero Section -->
+  <section id="home" class="parallax min-h-screen flex items-center justify-center relative bg-gradient-to-br from-blue-100 to-blue-200">
+   <div class="text-center text-blue-800 px-4 fade-in">
+    <h1 class="text-6xl md:text-8xl font-bold mb-6" id="hero-title">🗺️ Discover Amazing Indonesia</h1>
+    <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto" id="hero-subtitle">🏝️ Explore Jakarta, Bali &amp; Bandung with Eel's comprehensive travel guide</p>
+    <div class="space-x-4"><button class="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-semibold transition-colors shadow-lg"> 🚀 Start Exploring </button> <button class="border-2 border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white px-8 py-4 rounded-full text-lg font-semibold transition-colors shadow-lg"> 🎥 Watch Video </button>
+    </div>
+   </div><!-- Scroll Indicator -->
+   <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce"><span class="text-blue-600 text-4xl">⬇️</span>
+   </div>
+  </section><!-- Weather Widget -->
+  <section class="py-8 bg-gradient-to-r from-blue-100 to-blue-200">
+   <div class="max-w-7xl mx-auto px-4">
+    <div class="text-center mb-8 fade-in">
+     <h2 class="text-3xl font-bold text-blue-800 mb-2">🌤️ Current Weather</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+     <div class="weather-widget fade-in">
+      <h3 class="text-xl font-bold mb-2">🏙️ Jakarta</h3>
+      <div class="flex items-center justify-center space-x-4"><span class="text-4xl">☀️</span>
+       <div>
+        <div class="text-2xl font-bold">
+         32°C
+        </div>
+        <div class="text-sm opacity-80">
+         Sunny &amp; Hot
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="weather-widget fade-in">
+      <h3 class="text-xl font-bold mb-2">🏝️ Bali</h3>
+      <div class="flex items-center justify-center space-x-4"><span class="text-4xl">⛅</span>
+       <div>
+        <div class="text-2xl font-bold">
+         28°C
+        </div>
+        <div class="text-sm opacity-80">
+         Partly Cloudy
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="weather-widget fade-in">
+      <h3 class="text-xl font-bold mb-2">🏔️ Bandung</h3>
+      <div class="flex items-center justify-center space-x-4"><span class="text-4xl">🌧️</span>
+       <div>
+        <div class="text-2xl font-bold">
+         24°C
+        </div>
+        <div class="text-sm opacity-80">
+         Light Rain
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+  </section><!-- Travel Planner Section -->
+  <section id="planner" class="py-20 bg-gradient-to-br from-blue-50 to-blue-100">
+   <div class="max-w-7xl mx-auto px-4">
+    <div class="text-center mb-16 fade-in">
+     <h2 class="text-4xl font-bold text-blue-800 mb-4">📋 Smart Travel Planner</h2>
+     <p class="text-xl text-blue-600 max-w-3xl mx-auto">Plan your perfect Indonesian adventure with our intelligent tools</p>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8"><!-- Trip Planner Form -->
+     <div class="travel-planner fade-in">
+      <h3 class="text-2xl font-bold text-pink-800 mb-6">🎯 Plan Your Trip</h3>
+      <form id="trip-planner-form" class="space-y-4">
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label for="trip-destination" class="block text-sm font-medium text-blue-700 mb-2">🏝️ Destination</label> <select id="trip-destination" name="destination" required class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"> <option value="">Select destination</option> <option value="jakarta">🏙️ Jakarta</option> <option value="bali">🏝️ Bali</option> <option value="bandung">🏔️ Bandung</option> </select>
+        </div>
+        <div><label for="trip-date" class="block text-sm font-medium text-blue-700 mb-2">📅 Travel Date</label> <input type="date" id="trip-date" name="booking_date" required class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
+        </div>
+       </div>
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label for="trip-guests" class="block text-sm font-medium text-blue-700 mb-2">👥 Number of Guests</label> <input type="number" id="trip-guests" name="guests" min="1" max="20" required class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
+        </div>
+        <div><label for="trip-budget" class="block text-sm font-medium text-blue-700 mb-2">💰 Budget Range</label> <select id="trip-budget" name="budget" required class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"> <option value="">Select budget</option> <option value="budget">💵 Budget (Under $500)</option> <option value="mid-range">💳 Mid-range ($500-$1500)</option> <option value="luxury">💎 Luxury ($1500+)</option> </select>
+        </div>
+       </div>
+       <div><label for="trip-style" class="block text-sm font-medium text-blue-700 mb-2">🎨 Travel Style</label> <select id="trip-style" name="travel_style" required class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"> <option value="">Select style</option> <option value="adventure">🏃 Adventure &amp; Sports</option> <option value="cultural">🏛️ Cultural &amp; Historical</option> <option value="relaxation">🧘 Relaxation &amp; Wellness</option> <option value="foodie">🍜 Food &amp; Culinary</option> <option value="photography">📷 Photography &amp; Nature</option> </select>
+       </div><button type="submit" id="plan-trip-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors shadow-lg"> 🎯 Create My Itinerary </button>
+      </form>
+     </div><!-- Budget Calculator -->
+     <div class="budget-calculator fade-in">
+      <h3 class="text-2xl font-bold mb-6">💰 Budget Calculator</h3>
+      <div class="space-y-4">
+       <div class="flex justify-between items-center"><span class="text-lg">🏨 Accommodation</span>
+        <div class="flex items-center space-x-2"><button class="budget-btn bg-white/20 hover:bg-white/30 px-3 py-1 rounded" data-category="accommodation" data-amount="-50">-$50</button> <span class="budget-amount font-bold text-xl" id="accommodation-amount">$200</span> <button class="budget-btn bg-white/20 hover:bg-white/30 px-3 py-1 rounded" data-category="accommodation" data-amount="50">+$50</button>
+        </div>
+       </div>
+       <div class="flex justify-between items-center"><span class="text-lg">🍜 Food &amp; Dining</span>
+        <div class="flex items-center space-x-2"><button class="budget-btn bg-white/20 hover:bg-white/30 px-3 py-1 rounded" data-category="food" data-amount="-25">-$25</button> <span class="budget-amount font-bold text-xl" id="food-amount">$150</span> <button class="budget-btn bg-white/20 hover:bg-white/30 px-3 py-1 rounded" data-category="food" data-amount="25">+$25</button>
+        </div>
+       </div>
+       <div class="flex justify-between items-center"><span class="text-lg">🚗 Transportation</span>
+        <div class="flex items-center space-x-2"><button class="budget-btn bg-white/20 hover:bg-white/30 px-3 py-1 rounded" data-category="transport" data-amount="-30">-$30</button> <span class="budget-amount font-bold text-xl" id="transport-amount">$100</span> <button class="budget-btn bg-white/20 hover:bg-white/30 px-3 py-1 rounded" data-category="transport" data-amount="30">+$30</button>
+        </div>
+       </div>
+       <div class="flex justify-between items-center"><span class="text-lg">🎭 Activities</span>
+        <div class="flex items-center space-x-2"><button class="budget-btn bg-white/20 hover:bg-white/30 px-3 py-1 rounded" data-category="activities" data-amount="-40">-$40</button> <span class="budget-amount font-bold text-xl" id="activities-amount">$120</span> <button class="budget-btn bg-white/20 hover:bg-white/30 px-3 py-1 rounded" data-category="activities" data-amount="40">+$40</button>
+        </div>
+       </div>
+       <div class="border-t-2 border-white/30 pt-4 mt-6">
+        <div class="flex justify-between items-center text-2xl font-bold"><span>💎 Total Budget</span> <span id="total-budget">$570</span>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+  </section><!-- Destinations Section -->
+  <section id="destinations" class="py-20 bg-white">
+   <div class="max-w-7xl mx-auto px-4">
+    <div class="text-center mb-16 fade-in">
+     <h2 class="text-4xl font-bold text-blue-800 mb-4">🏝️ Popular Destinations</h2>
+     <p class="text-xl text-blue-600 max-w-3xl mx-auto">Discover the most amazing places in Indonesia with Eel's curated selection</p>
+    </div><!-- Filter Buttons -->
+    <div class="flex justify-center mb-12 fade-in">
+     <div class="flex space-x-4 bg-blue-100 rounded-full p-2"><button class="filter-btn active px-6 py-2 rounded-full bg-blue-500 text-white shadow-lg" data-filter="all">🌟 All</button> <button class="filter-btn px-6 py-2 rounded-full hover:bg-blue-500 hover:text-white transition-colors" data-filter="jakarta">🏙️ Jakarta</button> <button class="filter-btn px-6 py-2 rounded-full hover:bg-blue-500 hover:text-white transition-colors" data-filter="bali">🏝️ Bali</button> <button class="filter-btn px-6 py-2 rounded-full hover:bg-blue-500 hover:text-white transition-colors" data-filter="bandung">🏔️ Bandung</button>
+     </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="destinations-grid"><!-- Jakarta Destinations -->
+     <div class="destination-card blue-card rounded-xl shadow-lg overflow-hidden fade-in hover:shadow-xl transition-shadow cursor-pointer" data-category="jakarta" onclick="openDestination('monas')">
+      <div class="h-64 bg-gradient-to-br from-blue-300 to-blue-500 relative flex items-center justify-center"><span class="text-8xl">🏙️</span>
+      </div>
+      <div class="p-6">
+       <h3 class="text-xl font-bold mb-2 text-blue-800">🗼 Monas (National Monument)</h3>
+       <p class="text-blue-600 mb-4">Iconic symbol of Jakarta's independence and freedom</p>
+       <div class="flex items-center justify-between"><span class="text-blue-500 font-semibold">🏙️ Jakarta</span>
+        <div class="flex items-center"><span class="text-yellow-400 text-lg">⭐⭐⭐⭐⭐</span> <span class="ml-1 text-blue-600">4.5</span>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="destination-card blue-card rounded-xl shadow-lg overflow-hidden fade-in hover:shadow-xl transition-shadow cursor-pointer" data-category="jakarta" onclick="openDestination('grand-indonesia')">
+      <div class="h-64 bg-gradient-to-br from-blue-300 to-blue-500 relative flex items-center justify-center"><span class="text-8xl">🛍️</span>
+      </div>
+      <div class="p-6">
+       <h3 class="text-xl font-bold mb-2 text-blue-800">🏬 Grand Indonesia Mall</h3>
+       <p class="text-blue-600 mb-4">Premier shopping destination in the heart of Jakarta</p>
+       <div class="flex items-center justify-between"><span class="text-blue-500 font-semibold">🏙️ Jakarta</span>
+        <div class="flex items-center"><span class="text-yellow-400 text-lg">⭐⭐⭐⭐</span> <span class="ml-1 text-blue-600">4.3</span>
+        </div>
+       </div>
+      </div>
+     </div><!-- Bali Destinations -->
+     <div class="destination-card blue-card rounded-xl shadow-lg overflow-hidden fade-in hover:shadow-xl transition-shadow cursor-pointer" data-category="bali" onclick="openDestination('kuta-beach')">
+      <div class="h-64 bg-gradient-to-br from-blue-300 to-blue-500 relative flex items-center justify-center"><span class="text-8xl">🏖️</span>
+      </div>
+      <div class="p-6">
+       <h3 class="text-xl font-bold mb-2 text-blue-800">🌅 Kuta Beach</h3>
+       <p class="text-blue-600 mb-4">Famous beach with stunning sunsets and surfing waves</p>
+       <div class="flex items-center justify-between"><span class="text-blue-500 font-semibold">🏝️ Bali</span>
+        <div class="flex items-center"><span class="text-yellow-400 text-lg">⭐⭐⭐⭐⭐</span> <span class="ml-1 text-blue-600">4.7</span>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="destination-card blue-card rounded-xl shadow-lg overflow-hidden fade-in hover:shadow-xl transition-shadow cursor-pointer" data-category="bali" onclick="openDestination('mount-batur')">
+      <div class="h-64 bg-gradient-to-br from-blue-300 to-blue-500 relative flex items-center justify-center"><span class="text-8xl">🌋</span>
+      </div>
+      <div class="p-6">
+       <h3 class="text-xl font-bold mb-2 text-blue-800">🏔️ Mount Batur</h3>
+       <p class="text-blue-600 mb-4">Active volcano with breathtaking sunrise trekking experiences</p>
+       <div class="flex items-center justify-between"><span class="text-blue-500 font-semibold">🏝️ Bali</span>
+        <div class="flex items-center"><span class="text-yellow-400 text-lg">⭐⭐⭐⭐⭐</span> <span class="ml-1 text-blue-600">4.8</span>
+        </div>
+       </div>
+      </div>
+     </div><!-- Bandung Destinations -->
+     <div class="destination-card blue-card rounded-xl shadow-lg overflow-hidden fade-in hover:shadow-xl transition-shadow cursor-pointer" data-category="bandung" onclick="openDestination('tangkuban-perahu')">
+      <div class="h-64 bg-gradient-to-br from-blue-300 to-blue-500 relative flex items-center justify-center"><span class="text-8xl">🌿</span>
+      </div>
+      <div class="p-6">
+       <h3 class="text-xl font-bold mb-2 text-blue-800">⛰️ Tangkuban Perahu</h3>
+       <p class="text-blue-600 mb-4">Volcanic crater with unique boat-like shape and hot springs</p>
+       <div class="flex items-center justify-between"><span class="text-blue-500 font-semibold">🏔️ Bandung</span>
+        <div class="flex items-center"><span class="text-yellow-400 text-lg">⭐⭐⭐⭐⭐</span> <span class="ml-1 text-blue-600">4.6</span>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="destination-card blue-card rounded-xl shadow-lg overflow-hidden fade-in hover:shadow-xl transition-shadow cursor-pointer" data-category="bandung" onclick="openDestination('braga-street')">
+      <div class="h-64 bg-gradient-to-br from-blue-300 to-blue-500 relative flex items-center justify-center"><span class="text-8xl">🏛️</span>
+      </div>
+      <div class="p-6">
+       <h3 class="text-xl font-bold mb-2 text-blue-800">🚶 Braga Street</h3>
+       <p class="text-blue-600 mb-4">Historic street with colonial architecture and trendy cafes</p>
+       <div class="flex items-center justify-between"><span class="text-blue-500 font-semibold">🏔️ Bandung</span>
+        <div class="flex items-center"><span class="text-yellow-400 text-lg">⭐⭐⭐⭐</span> <span class="ml-1 text-blue-600">4.4</span>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+  </section><!-- Virtual Tour Section -->
+  <section class="py-20 bg-gradient-to-br from-blue-50 to-blue-100">
+   <div class="max-w-7xl mx-auto px-4">
+    <div class="text-center mb-16 fade-in">
+     <h2 class="text-4xl font-bold text-blue-800 mb-4">🥽 Virtual Tour 360°</h2>
+     <p class="text-xl text-blue-600">Experience destinations from the comfort of your home</p>
+    </div>
+    <div class="virtual-tour fade-in">
+     <div class="absolute inset-0 flex items-center justify-center">
+      <div class="text-center text-white"><span class="text-8xl mb-4 block">🥽</span>
+       <h3 class="text-2xl font-bold mb-2">360° Virtual Experience</h3>
+       <p class="mb-4">Drag to explore the virtual environment</p><button class="bg-white text-blue-600 px-6 py-3 rounded-full font-semibold hover:bg-blue-50 transition-colors shadow-lg"> 🚀 Start Virtual Tour </button>
+      </div>
+     </div>
+    </div>
+   </div>
+  </section><!-- Travel Tips Section -->
+  <section class="py-20 bg-white">
+   <div class="max-w-7xl mx-auto px-4">
+    <div class="text-center mb-16 fade-in">
+     <h2 class="text-4xl font-bold text-blue-800 mb-4">💡 Smart Travel Tips</h2>
+     <p class="text-xl text-blue-600">Expert advice for your Indonesian adventure</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+     <div class="travel-tips fade-in">
+      <div class="text-center mb-4"><span class="text-6xl">💰</span>
+      </div>
+      <h3 class="text-xl font-bold text-blue-800 mb-3">Money Saving Tips</h3>
+      <ul class="text-blue-600 space-y-2">
+       <li>• Use local transportation (ojek, angkot)</li>
+       <li>• Eat at local warungs for authentic food</li>
+       <li>• Book accommodations in advance</li>
+       <li>• Travel during off-peak seasons</li>
+      </ul>
+     </div>
+     <div class="travel-tips fade-in">
+      <div class="text-center mb-4"><span class="text-6xl">🎒</span>
+      </div>
+      <h3 class="text-xl font-bold text-blue-800 mb-3">Packing Essentials</h3>
+      <ul class="text-blue-600 space-y-2">
+       <li>• Lightweight, breathable clothing</li>
+       <li>• Sunscreen and insect repellent</li>
+       <li>• Comfortable walking shoes</li>
+       <li>• Portable charger and adapter</li>
+      </ul>
+     </div>
+     <div class="travel-tips fade-in">
+      <div class="text-center mb-4"><span class="text-6xl">🗣️</span>
+      </div>
+      <h3 class="text-xl font-bold text-blue-800 mb-3">Useful Phrases</h3>
+      <ul class="text-blue-600 space-y-2">
+       <li>• "Terima kasih" - Thank you</li>
+       <li>• "Berapa harganya?" - How much?</li>
+       <li>• "Saya tidak mengerti" - I don't understand</li>
+       <li>• "Tolong" - Please/Help</li>
+      </ul>
+     </div>
+    </div>
+   </div>
+  </section><!-- Gallery Section -->
+  <section id="gallery" class="py-20 bg-gradient-to-br from-blue-50 to-blue-100">
+   <div class="max-w-7xl mx-auto px-4">
+    <div class="text-center mb-16 fade-in">
+     <h2 class="text-4xl font-bold text-blue-800 mb-4">📸 Photo Gallery</h2>
+     <p class="text-xl text-blue-600">Stunning visuals from our favorite destinations</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+     <div class="gallery-item h-64 bg-gradient-to-br from-blue-300 to-blue-500 rounded-xl overflow-hidden cursor-pointer hover:scale-105 transition-transform fade-in flex items-center justify-center"><span class="text-6xl">🏙️</span>
+     </div>
+     <div class="gallery-item h-64 bg-gradient-to-br from-blue-300 to-blue-500 rounded-xl overflow-hidden cursor-pointer hover:scale-105 transition-transform fade-in flex items-center justify-center"><span class="text-6xl">📷</span>
+     </div>
+     <div class="gallery-item h-64 bg-gradient-to-br from-blue-300 to-blue-500 rounded-xl overflow-hidden cursor-pointer hover:scale-105 transition-transform fade-in flex items-center justify-center"><span class="text-6xl">🏔️</span>
+     </div>
+     <div class="gallery-item h-64 bg-gradient-to-br from-blue-300 to-blue-500 rounded-xl overflow-hidden cursor-pointer hover:scale-105 transition-transform fade-in flex items-center justify-center"><span class="text-6xl">🌊</span>
+     </div>
+    </div>
+   </div>
+  </section><!-- Testimonials Carousel -->
+  <section class="py-20 bg-white">
+   <div class="max-w-7xl mx-auto px-4">
+    <div class="text-center mb-16 fade-in">
+     <h2 class="text-4xl font-bold text-blue-800 mb-4">💬 What Travelers Say</h2>
+     <p class="text-xl text-blue-600">Real experiences from our amazing community</p>
+    </div>
+    <div class="carousel-container relative">
+     <div class="carousel-track" id="testimonial-track">
+      <div class="carousel-slide">
+       <div class="blue-card rounded-xl shadow-lg p-8 mx-4 text-center">
+        <div class="mb-4"><span class="text-4xl">💕</span>
+        </div>
+        <p class="text-blue-600 mb-6 text-lg">"Amazing experience in Bali! The beaches were pristine and the culture was absolutely fascinating. Eel's Map made planning so easy!"</p>
+        <div class="flex items-center justify-center">
+         <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mr-4"><span class="text-white text-xl">👩</span>
+         </div>
+         <div>
+          <h4 class="font-bold text-blue-800">Sarah Johnson</h4>
+          <p class="text-blue-600">Travel Blogger</p>
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="carousel-slide">
+       <div class="blue-card rounded-xl shadow-lg p-8 mx-4 text-center">
+        <div class="mb-4"><span class="text-4xl">🍜</span>
+        </div>
+        <p class="text-blue-600 mb-6 text-lg">"Jakarta's vibrant city life and delicious street food made our trip unforgettable! The budget calculator was super helpful."</p>
+        <div class="flex items-center justify-center">
+         <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mr-4"><span class="text-white text-xl">👨</span>
+         </div>
+         <div>
+          <h4 class="font-bold text-blue-800">Mike Chen</h4>
+          <p class="text-blue-600">Food Enthusiast</p>
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="carousel-slide">
+       <div class="blue-card rounded-xl shadow-lg p-8 mx-4 text-center">
+        <div class="mb-4"><span class="text-4xl">🏔️</span>
+        </div>
+        <p class="text-blue-600 mb-6 text-lg">"Bandung's cool weather and beautiful landscapes provided the perfect getaway. The travel planner feature is genius!"</p>
+        <div class="flex items-center justify-center">
+         <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mr-4"><span class="text-white text-xl">👩</span>
+         </div>
+         <div>
+          <h4 class="font-bold text-blue-800">Lisa Wong</h4>
+          <p class="text-blue-600">Nature Lover</p>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div><button class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-3 shadow-lg hover:bg-blue-50 border-2 border-blue-200" id="prev-testimonial"> <span class="text-blue-600 text-xl">⬅️</span> </button> <button class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-3 shadow-lg hover:bg-blue-50 border-2 border-blue-200" id="next-testimonial"> <span class="text-blue-600 text-xl">➡️</span> </button>
+    </div>
+   </div>
+  </section><!-- Statistics Counter -->
+  <section class="py-20 bg-gradient-to-r from-blue-400 to-blue-600 text-white">
+   <div class="max-w-7xl mx-auto px-4">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+     <div class="fade-in">
+      <div class="text-5xl mb-2">
+       😊
+      </div>
+      <div class="text-4xl font-bold mb-2 counter" data-target="50000">
+       0
+      </div>
+      <p class="text-xl">Happy Travelers</p>
+     </div>
+     <div class="fade-in">
+      <div class="text-5xl mb-2">
+       🏝️
+      </div>
+      <div class="text-4xl font-bold mb-2 counter" data-target="150">
+       0
+      </div>
+      <p class="text-xl">Destinations</p>
+     </div>
+     <div class="fade-in">
+      <div class="text-5xl mb-2">
+       🎂
+      </div>
+      <div class="text-4xl font-bold mb-2 counter" data-target="25">
+       0
+      </div>
+      <p class="text-xl">Years Experience</p>
+     </div>
+     <div class="fade-in">
+      <div class="text-5xl mb-2">
+       👥
+      </div>
+      <div class="text-4xl font-bold mb-2 counter" data-target="500">
+       0
+      </div>
+      <p class="text-xl">Tour Guides</p>
+     </div>
+    </div>
+   </div>
+  </section><!-- Blog Section -->
+  <section id="blog" class="py-20 bg-gradient-to-br from-blue-50 to-blue-100">
+   <div class="max-w-7xl mx-auto px-4">
+    <div class="text-center mb-16 fade-in">
+     <h2 class="text-4xl font-bold text-blue-800 mb-4">📝 Travel Blog</h2>
+     <p class="text-xl text-blue-600">Latest travel tips, stories, and insider guides</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8" id="blog-grid">
+     <article class="blue-card rounded-xl shadow-lg overflow-hidden fade-in hover:shadow-xl transition-shadow cursor-pointer" onclick="openBlogPost('bali-guide')">
+      <div class="h-48 bg-gradient-to-br from-blue-300 to-blue-500 flex items-center justify-center"><span class="text-6xl">🏝️</span>
+      </div>
+      <div class="p-6">
+       <h3 class="text-xl font-bold mb-2 text-blue-800">🌅 Best Time to Visit Bali</h3>
+       <p class="text-blue-600 mb-4">Discover the perfect season for your Bali adventure with our comprehensive weather guide...</p>
+       <div class="flex items-center justify-between"><span class="text-sm text-blue-500">📅 March 15, 2024</span> <span class="text-blue-600 hover:text-blue-800 font-semibold">📖 Read More</span>
+       </div>
+      </div>
+     </article>
+     <article class="blue-card rounded-xl shadow-lg overflow-hidden fade-in hover:shadow-xl transition-shadow cursor-pointer" onclick="openBlogPost('jakarta-food')">
+      <div class="h-48 bg-gradient-to-br from-blue-300 to-blue-500 flex items-center justify-center"><span class="text-6xl">🍜</span>
+      </div>
+      <div class="p-6">
+       <h3 class="text-xl font-bold mb-2 text-blue-800">🥘 Jakarta Street Food Guide</h3>
+       <p class="text-blue-600 mb-4">Must-try local delicacies in Indonesia's bustling capital city...</p>
+       <div class="flex items-center justify-between"><span class="text-sm text-blue-500">📅 March 12, 2024</span> <span class="text-blue-600 hover:text-blue-800 font-semibold">📖 Read More</span>
+       </div>
+      </div>
+     </article>
+     <article class="blue-card rounded-xl shadow-lg overflow-hidden fade-in hover:shadow-xl transition-shadow cursor-pointer" onclick="openBlogPost('bandung-photo')">
+      <div class="h-48 bg-gradient-to-br from-blue-300 to-blue-500 flex items-center justify-center"><span class="text-6xl">📷</span>
+      </div>
+      <div class="p-6">
+       <h3 class="text-xl font-bold mb-2 text-blue-800">📸 Photography Tips for Bandung</h3>
+       <p class="text-blue-600 mb-4">Capture the beauty of West Java's cultural hub with these pro tips...</p>
+       <div class="flex items-center justify-between"><span class="text-sm text-blue-500">📅 March 10, 2024</span> <span class="text-blue-600 hover:text-blue-800 font-semibold">📖 Read More</span>
+       </div>
+      </div>
+     </article>
+    </div>
+   </div>
+  </section><!-- Contact Section -->
+  <section id="contact" class="py-20 bg-white">
+   <div class="max-w-7xl mx-auto px-4">
+    <div class="text-center mb-16 fade-in">
+     <h2 class="text-4xl font-bold text-blue-800 mb-4" id="contact-title">💌 Get In Touch</h2>
+     <p class="text-xl text-blue-600">Plan your next adventure with Eel's expert guidance</p>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12"><!-- Contact Form -->
+     <div class="fade-in">
+      <form id="contact-form" class="space-y-6">
+       <div><label for="name" class="block text-sm font-medium text-blue-700 mb-2">👤 Full Name</label> <input type="text" id="name" name="name" required class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-blue-50">
+       </div>
+       <div><label for="email" class="block text-sm font-medium text-blue-700 mb-2">📧 Email Address</label> <input type="email" id="email" name="email" required class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-blue-50">
+       </div>
+       <div><label for="destination" class="block text-sm font-medium text-blue-700 mb-2">🏝️ Interested Destination</label> <select id="destination" name="destination" required class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-blue-50"> <option value="">Select a destination</option> <option value="jakarta">🏙️ Jakarta</option> <option value="bali">🏝️ Bali</option> <option value="bandung">🏔️ Bandung</option> <option value="all">🌟 All Destinations</option> </select>
+       </div>
+       <div><label for="message" class="block text-sm font-medium text-blue-700 mb-2">💭 Message</label> <textarea id="message" name="message" rows="5" required class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-blue-50"></textarea>
+       </div><button type="submit" id="submit-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors shadow-lg"> 💌 Send Message </button>
+      </form>
+     </div><!-- Contact Info & Map -->
+     <div class="fade-in">
+      <div class="blue-card rounded-xl shadow-lg p-8 mb-8">
+       <h3 class="text-2xl font-bold text-blue-800 mb-6">📞 Contact Information</h3>
+       <div class="space-y-4">
+        <div class="flex items-center"><span class="text-blue-600 text-2xl mr-4">📍</span> <span class="text-blue-600">Jakarta, Indonesia</span>
+        </div>
+        <div class="flex items-center"><span class="text-blue-600 text-2xl mr-4">📱</span> <span class="text-blue-600">+62 21 1234 5678</span>
+        </div>
+        <div class="flex items-center"><span class="text-blue-600 text-2xl mr-4">📧</span> <span class="text-blue-600">hello@eelsmap.com</span>
+        </div>
+       </div>
+      </div><!-- Map Integration -->
+      <div class="bg-gradient-to-br from-blue-300 to-blue-500 rounded-xl h-64 flex items-center justify-center">
+       <div class="text-center text-white"><span class="text-6xl mb-4 block">🗺️</span>
+        <h4 class="text-xl font-bold">Interactive Map</h4>
+        <p>Find us on the map</p>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+  </section><!-- Feedback Form -->
+  <section class="py-20 bg-gradient-to-br from-blue-50 to-blue-100">
+   <div class="max-w-4xl mx-auto px-4">
+    <div class="text-center mb-16 fade-in">
+     <h2 class="text-4xl font-bold text-blue-800 mb-4">⭐ Rate Your Experience</h2>
+     <p class="text-xl text-blue-600">Help us improve Eel's Map for future travelers</p>
+    </div>
+    <form id="feedback-form" class="blue-card rounded-xl p-8 fade-in">
+     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div><label for="feedback-name" class="block text-sm font-medium text-blue-700 mb-2">👤 Name</label> <input type="text" id="feedback-name" name="name" required class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
+      </div>
+      <div><label for="visited-destination" class="block text-sm font-medium text-blue-700 mb-2">🏝️ Visited Destination</label> <select id="visited-destination" name="destination" required class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"> <option value="">Select destination</option> <option value="jakarta">🏙️ Jakarta</option> <option value="bali">🏝️ Bali</option> <option value="bandung">🏔️ Bandung</option> </select>
+      </div>
+     </div>
+     <div class="mb-6"><label class="block text-sm font-medium text-blue-700 mb-4">⭐ Overall Rating</label>
+      <div class="flex space-x-2" id="rating-stars"><button type="button" class="star text-4xl text-gray-300 hover:text-yellow-400 transition-colors" data-rating="1">⭐</button> <button type="button" class="star text-4xl text-gray-300 hover:text-yellow-400 transition-colors" data-rating="2">⭐</button> <button type="button" class="star text-4xl text-gray-300 hover:text-yellow-400 transition-colors" data-rating="3">⭐</button> <button type="button" class="star text-4xl text-gray-300 hover:text-yellow-400 transition-colors" data-rating="4">⭐</button> <button type="button" class="star text-4xl text-gray-300 hover:text-yellow-400 transition-colors" data-rating="5">⭐</button>
+      </div><input type="hidden" id="rating-value" name="rating" required>
+     </div>
+     <div class="mb-6"><label for="feedback-message" class="block text-sm font-medium text-blue-700 mb-2">💭 Your Feedback</label> <textarea id="feedback-message" name="message" rows="4" required class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"></textarea>
+     </div><button type="submit" id="feedback-submit-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors shadow-lg"> ✨ Submit Feedback </button>
+    </form>
+   </div>
+  </section><!-- Footer -->
+  <footer class="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-16">
+   <div class="max-w-7xl mx-auto px-4">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+     <div>
+      <h3 class="text-3xl font-bold mb-4">🗺️ Eel's Map</h3>
+      <p class="text-blue-100 mb-4">Your gateway to discovering the beauty of Indonesia with love and care</p>
+      <div class="flex space-x-4"><button class="social-share bg-blue-600 hover:bg-blue-700 p-3 rounded-full transition-colors" data-platform="facebook"> <span class="text-xl">📘</span> </button> <button class="social-share bg-blue-400 hover:bg-blue-500 p-3 rounded-full transition-colors" data-platform="twitter"> <span class="text-xl">🐦</span> </button> <button class="social-share bg-blue-600 hover:bg-blue-700 p-3 rounded-full transition-colors" data-platform="instagram"> <span class="text-xl">📷</span> </button> <button class="social-share bg-red-600 hover:bg-red-700 p-3 rounded-full transition-colors" data-platform="youtube"> <span class="text-xl">📺</span> </button>
+      </div>
+     </div>
+     <div>
+      <h4 class="text-lg font-semibold mb-4">🔗 Quick Links</h4>
+      <ul class="space-y-2 text-blue-100">
+       <li><a href="#home" class="hover:text-white transition-colors">🏠 Home</a></li>
+       <li><a href="#destinations" class="hover:text-white transition-colors">🏝️ Destinations</a></li>
+       <li><a href="#planner" class="hover:text-white transition-colors">📋 Planner</a></li>
+       <li><a href="#gallery" class="hover:text-white transition-colors">📸 Gallery</a></li>
+       <li><a href="#contact" class="hover:text-white transition-colors">💌 Contact</a></li>
+      </ul>
+     </div>
+     <div>
+      <h4 class="text-lg font-semibold mb-4">🏝️ Destinations</h4>
+      <ul class="space-y-2 text-blue-100">
+       <li><a href="#" class="hover:text-white transition-colors">🏙️ Jakarta</a></li>
+       <li><a href="#" class="hover:text-white transition-colors">🏝️ Bali</a></li>
+       <li><a href="#" class="hover:text-white transition-colors">🏔️ Bandung</a></li>
+       <li><a href="#" class="hover:text-white transition-colors">🌟 All Destinations</a></li>
+      </ul>
+     </div>
+     <div>
+      <h4 class="text-lg font-semibold mb-4">📧 Newsletter</h4>
+      <p class="text-blue-100 mb-4">Subscribe for travel updates and exclusive tips</p>
+      <form id="newsletter-form" class="space-y-2"><input type="email" placeholder="Your email" required class="w-full px-4 py-2 bg-blue-700 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-300 text-white placeholder-blue-200"> <button type="submit" class="w-full bg-blue-500 hover:bg-blue-400 text-white py-2 rounded transition-colors"> 💌 Subscribe </button>
+      </form>
+     </div>
+    </div>
+    <div class="border-t border-blue-500 mt-12 pt-8 text-center text-blue-100">
+     <p>💕 © 2024 Eel's Map. Made with love for travelers. All rights reserved.</p>
+    </div>
+   </div>
+  </footer><!-- Chatbot -->
+  <div class="chatbot"><button id="chatbot-toggle" class="bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-full shadow-lg transition-colors"> <span class="text-2xl">💬</span> </button>
+   <div id="chatbot-window" class="chatbot-window">
+    <div class="bg-pink-500 text-white p-4 rounded-t-lg">
+     <div class="flex items-center justify-between">
+      <h4 class="font-semibold">🤖 Eel's Travel Assistant</h4><button id="chatbot-close" class="text-white hover:text-pink-200"> <span class="text-xl">❌</span> </button>
+     </div>
+    </div>
+    <div class="p-4 h-80 overflow-y-auto" id="chatbot-messages">
+     <div class="bg-pink-100 rounded-lg p-3 mb-3">
+      <p class="text-sm text-pink-800">🌸 Hello! I'm Eel's travel assistant. How can I help you plan your amazing Indonesian adventure?</p>
+     </div>
+    </div>
+    <div class="p-4 border-t">
+     <form id="chatbot-form" class="flex space-x-2"><input type="text" id="chatbot-input" placeholder="Ask me anything..." class="flex-1 px-3 py-2 border-2 border-pink-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"> <button type="submit" class="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg transition-colors"> <span class="text-lg">📤</span> </button>
+     </form>
+    </div>
+   </div>
+  </div><!-- Blog Post Modal -->
+  <div id="blog-modal" class="modal">
+   <div class="modal-content">
+    <div class="bg-pink-500 text-white p-4 rounded-t-xl flex justify-between items-center">
+     <h2 id="blog-modal-title" class="text-2xl font-bold">📝 Blog Post</h2><button onclick="closeBlogPost()" class="text-white hover:text-pink-200 text-2xl">❌</button>
+    </div>
+    <div id="blog-modal-content" class="p-6"><!-- Blog content will be loaded here -->
+    </div>
+   </div>
+  </div><!-- Destination Modal -->
+  <div id="destination-modal" class="modal">
+   <div class="modal-content">
+    <div class="bg-pink-500 text-white p-4 rounded-t-xl flex justify-between items-center">
+     <h2 id="destination-modal-title" class="text-2xl font-bold">🏝️ Destination Guide</h2><button onclick="closeDestination()" class="text-white hover:text-pink-200 text-2xl">❌</button>
+    </div>
+    <div id="destination-modal-content" class="p-6"><!-- Destination content will be loaded here -->
+    </div>
+   </div>
+  </div>
+  <script>
+        // Global variables
+        let currentTestimonial = 0;
+        let currentRating = 0;
+        let isDarkMode = false;
+        let currentLanguage = 'en';
+        let dataHandler;
+        let allData = [];
+        let budgetAmounts = {
+            accommodation: 200,
+            food: 150,
+            transport: 100,
+            activities: 120
+        };
+
+        // Default config for Element SDK
+        const defaultConfig = {
+            site_title: "🗺️ Eel's Map",
+            hero_title: "🗺️ Discover Amazing Indonesia",
+            hero_subtitle: "🏝️ Explore Jakarta, Bali & Bandung with Eel's comprehensive travel guide",
+            contact_title: "💌 Get In Touch",
+            background_color: "#f0f9ff",
+            surface_color: "#ffffff",
+            text_color: "#1e40af",
+            primary_action_color: "#3b82f6",
+            secondary_action_color: "#60a5fa"
+        };
+
+        // Data SDK Handler
+        dataHandler = {
+            onDataChanged(data) {
+                allData = data;
+                console.log('Data updated:', data.length, 'records');
+            }
+        };
+
+        // Blog posts data
+        const blogPosts = {
+            'bali-guide': {
+                title: '🌅 Best Time to Visit Bali',
+                content: `
+                    <div class="space-y-6">
+                        <div class="text-center mb-8">
+                            <span class="text-8xl">🏝️</span>
+                            <h1 class="text-3xl font-bold text-pink-800 mt-4">Best Time to Visit Bali</h1>
+                            <p class="text-pink-600 mt-2">📅 Published: March 15, 2024</p>
+                        </div>
+                        
+                        <div class="prose max-w-none">
+                            <h2 class="text-2xl font-bold text-pink-800 mb-4">🌤️ Weather Overview</h2>
+                            <p class="text-pink-700 mb-4">Bali enjoys a tropical climate with two main seasons: dry season (April-October) and wet season (November-March). The best time to visit depends on your preferences and activities.</p>
+                            
+                            <h3 class="text-xl font-bold text-pink-800 mb-3">☀️ Dry Season (April - October)</h3>
+                            <ul class="list-disc list-inside text-pink-700 mb-4 space-y-2">
+                                <li>Perfect weather for beach activities and outdoor adventures</li>
+                                <li>Less rainfall and lower humidity</li>
+                                <li>Peak tourist season (July-August)</li>
+                                <li>Higher accommodation prices</li>
+                            </ul>
+                            
+                            <h3 class="text-xl font-bold text-pink-800 mb-3">🌧️ Wet Season (November - March)</h3>
+                            <ul class="list-disc list-inside text-pink-700 mb-4 space-y-2">
+                                <li>Lower prices and fewer crowds</li>
+                                <li>Lush green landscapes</li>
+                                <li>Short afternoon showers</li>
+                                <li>Great for cultural activities and spa treatments</li>
+                            </ul>
+                            
+                            <h2 class="text-2xl font-bold text-pink-800 mb-4">🍜 Local Food Recommendations</h2>
+                            <div class="food-grid">
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🍛</span>
+                                    <h4 class="font-bold text-pink-800">Nasi Goreng</h4>
+                                    <p class="text-pink-600 text-sm">Indonesian fried rice with sweet soy sauce</p>
+                                </div>
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🥘</span>
+                                    <h4 class="font-bold text-pink-800">Rendang</h4>
+                                    <p class="text-pink-600 text-sm">Slow-cooked beef in coconut curry</p>
+                                </div>
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🍢</span>
+                                    <h4 class="font-bold text-pink-800">Satay</h4>
+                                    <p class="text-pink-600 text-sm">Grilled meat skewers with peanut sauce</p>
+                                </div>
+                            </div>
+                            
+                            <h2 class="text-2xl font-bold text-pink-800 mb-4">🏝️ Must-Visit Places</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🏖️ Kuta Beach</h4>
+                                    <p class="text-pink-600 text-sm">Perfect for surfing and sunset watching</p>
+                                </div>
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🏛️ Tanah Lot Temple</h4>
+                                    <p class="text-pink-600 text-sm">Iconic sea temple with stunning views</p>
+                                </div>
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🌾 Jatiluwih Rice Terraces</h4>
+                                    <p class="text-pink-600 text-sm">UNESCO World Heritage rice fields</p>
+                                </div>
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🐒 Ubud Monkey Forest</h4>
+                                    <p class="text-pink-600 text-sm">Sacred sanctuary with playful monkeys</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            'jakarta-food': {
+                title: '🥘 Jakarta Street Food Guide',
+                content: `
+                    <div class="space-y-6">
+                        <div class="text-center mb-8">
+                            <span class="text-8xl">🍜</span>
+                            <h1 class="text-3xl font-bold text-pink-800 mt-4">Jakarta Street Food Guide</h1>
+                            <p class="text-pink-600 mt-2">📅 Published: March 12, 2024</p>
+                        </div>
+                        
+                        <div class="prose max-w-none">
+                            <h2 class="text-2xl font-bold text-pink-800 mb-4">🍽️ Must-Try Jakarta Street Foods</h2>
+                            
+                            <div class="food-grid">
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🍲</span>
+                                    <h4 class="font-bold text-pink-800">Soto Betawi</h4>
+                                    <p class="text-pink-600 text-sm">Traditional Jakarta beef soup with coconut milk</p>
+                                    <p class="text-pink-500 text-xs mt-2">💰 Price: $2-4</p>
+                                </div>
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🥟</span>
+                                    <h4 class="font-bold text-pink-800">Kerak Telor</h4>
+                                    <p class="text-pink-600 text-sm">Spicy omelette with sticky rice and coconut</p>
+                                    <p class="text-pink-500 text-xs mt-2">💰 Price: $1-2</p>
+                                </div>
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🍛</span>
+                                    <h4 class="font-bold text-pink-800">Nasi Uduk</h4>
+                                    <p class="text-pink-600 text-sm">Coconut rice with various side dishes</p>
+                                    <p class="text-pink-500 text-xs mt-2">💰 Price: $1.50-3</p>
+                                </div>
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🍹</span>
+                                    <h4 class="font-bold text-pink-800">Es Campur</h4>
+                                    <p class="text-pink-600 text-sm">Mixed ice dessert with fruits and jellies</p>
+                                    <p class="text-pink-500 text-xs mt-2">💰 Price: $1-2</p>
+                                </div>
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🥙</span>
+                                    <h4 class="font-bold text-pink-800">Martabak</h4>
+                                    <p class="text-pink-600 text-sm">Stuffed pancake with meat or sweet fillings</p>
+                                    <p class="text-pink-500 text-xs mt-2">💰 Price: $2-5</p>
+                                </div>
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🍢</span>
+                                    <h4 class="font-bold text-pink-800">Gado-Gado</h4>
+                                    <p class="text-pink-600 text-sm">Mixed vegetables with peanut sauce</p>
+                                    <p class="text-pink-500 text-xs mt-2">💰 Price: $1.50-3</p>
+                                </div>
+                            </div>
+                            
+                            <h2 class="text-2xl font-bold text-pink-800 mb-4">📍 Best Food Areas</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🏪 Jalan Sabang</h4>
+                                    <p class="text-pink-600 text-sm">Famous street food strip near Thamrin</p>
+                                </div>
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🌃 Pecenongan</h4>
+                                    <p class="text-pink-600 text-sm">24-hour food street in Central Jakarta</p>
+                                </div>
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🏛️ Kota Tua</h4>
+                                    <p class="text-pink-600 text-sm">Historic area with traditional snacks</p>
+                                </div>
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🛍️ Blok M</h4>
+                                    <p class="text-pink-600 text-sm">Popular food court and street vendors</p>
+                                </div>
+                            </div>
+                            
+                            <h2 class="text-2xl font-bold text-pink-800 mb-4">💡 Food Safety Tips</h2>
+                            <ul class="list-disc list-inside text-pink-700 space-y-2">
+                                <li>Choose busy stalls with high turnover</li>
+                                <li>Look for freshly cooked, hot food</li>
+                                <li>Drink bottled or boiled water</li>
+                                <li>Start with milder spices if you're not used to spicy food</li>
+                                <li>Carry hand sanitizer</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            },
+            'bandung-photo': {
+                title: '📸 Photography Tips for Bandung',
+                content: `
+                    <div class="space-y-6">
+                        <div class="text-center mb-8">
+                            <span class="text-8xl">📷</span>
+                            <h1 class="text-3xl font-bold text-pink-800 mt-4">Photography Tips for Bandung</h1>
+                            <p class="text-pink-600 mt-2">📅 Published: March 10, 2024</p>
+                        </div>
+                        
+                        <div class="prose max-w-none">
+                            <h2 class="text-2xl font-bold text-pink-800 mb-4">📸 Best Photography Spots</h2>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🌋 Tangkuban Perahu</h4>
+                                    <p class="text-pink-600 text-sm">Volcanic crater with misty landscapes</p>
+                                    <p class="text-pink-500 text-xs mt-2">📷 Best time: Early morning</p>
+                                </div>
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🏛️ Braga Street</h4>
+                                    <p class="text-pink-600 text-sm">Colonial architecture and vintage vibes</p>
+                                    <p class="text-pink-500 text-xs mt-2">📷 Best time: Golden hour</p>
+                                </div>
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🌸 Floating Market</h4>
+                                    <p class="text-pink-600 text-sm">Colorful boats and local culture</p>
+                                    <p class="text-pink-500 text-xs mt-2">📷 Best time: Morning</p>
+                                </div>
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🏔️ Dago Dreampark</h4>
+                                    <p class="text-pink-600 text-sm">City views and recreational activities</p>
+                                    <p class="text-pink-500 text-xs mt-2">📷 Best time: Sunset</p>
+                                </div>
+                            </div>
+                            
+                            <h2 class="text-2xl font-bold text-pink-800 mb-4">🍜 Local Bandung Specialties</h2>
+                            <div class="food-grid">
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🥟</span>
+                                    <h4 class="font-bold text-pink-800">Batagor</h4>
+                                    <p class="text-pink-600 text-sm">Fried fish dumplings with peanut sauce</p>
+                                </div>
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🍲</span>
+                                    <h4 class="font-bold text-pink-800">Soto Bandung</h4>
+                                    <p class="text-pink-600 text-sm">Clear beef soup with radish and soybean</p>
+                                </div>
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🥘</span>
+                                    <h4 class="font-bold text-pink-800">Lotek</h4>
+                                    <p class="text-pink-600 text-sm">Mixed vegetables with spicy peanut dressing</p>
+                                </div>
+                            </div>
+                            
+                            <h2 class="text-2xl font-bold text-pink-800 mb-4">📱 Photography Tips</h2>
+                            <ul class="list-disc list-inside text-pink-700 space-y-2">
+                                <li>Visit during golden hour (6-7 AM or 5-6 PM) for warm lighting</li>
+                                <li>Bring layers - Bandung can be cool in the mornings</li>
+                                <li>Use a polarizing filter for clearer mountain shots</li>
+                                <li>Capture the colonial architecture details on Braga Street</li>
+                                <li>Don't forget to photograph the delicious local food!</li>
+                                <li>Respect local customs when photographing people</li>
+                            </ul>
+                            
+                            <h2 class="text-2xl font-bold text-pink-800 mb-4">🎯 Recommended Attractions</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🏛️ Gedung Sate</h4>
+                                    <p class="text-pink-600 text-sm">Iconic government building with unique architecture</p>
+                                </div>
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🌺 Begonia Garden</h4>
+                                    <p class="text-pink-600 text-sm">Beautiful flower garden perfect for portraits</p>
+                                </div>
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🏭 Factory Outlets</h4>
+                                    <p class="text-pink-600 text-sm">Shopping and fashion photography opportunities</p>
+                                </div>
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">☕ Coffee Shops</h4>
+                                    <p class="text-pink-600 text-sm">Cozy cafes with Instagram-worthy interiors</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            }
+        };
+
+        // Destination data
+        const destinations = {
+            'monas': {
+                title: '🗼 Monas (National Monument)',
+                content: `
+                    <div class="space-y-6">
+                        <div class="text-center mb-8">
+                            <span class="text-8xl">🏙️</span>
+                            <h1 class="text-3xl font-bold text-pink-800 mt-4">Monas (National Monument)</h1>
+                            <p class="text-pink-600 mt-2">📍 Central Jakarta, Indonesia</p>
+                            <div class="flex justify-center items-center mt-4">
+                                <span class="text-yellow-400 text-2xl">⭐⭐⭐⭐⭐</span>
+                                <span class="ml-2 text-pink-600 font-semibold">4.5/5</span>
+                            </div>
+                        </div>
+                        
+                        <div class="prose max-w-none">
+                            <h2 class="text-2xl font-bold text-pink-800 mb-4">🏛️ About Monas</h2>
+                            <p class="text-pink-700 mb-4">The National Monument (Monas) is a 132-meter tower in the center of Merdeka Square, Central Jakarta. It symbolizes the fight for Indonesia's independence and is topped with a flame covered in gold foil.</p>
+                            
+                            <h3 class="text-xl font-bold text-pink-800 mb-3">🎯 What to Do</h3>
+                            <ul class="list-disc list-inside text-pink-700 mb-4 space-y-2">
+                                <li>Take the elevator to the observation deck for panoramic city views</li>
+                                <li>Visit the National History Museum in the basement</li>
+                                <li>Walk around Merdeka Square and enjoy the gardens</li>
+                                <li>Watch the fountain show in the evening</li>
+                                <li>Take photos with the golden flame</li>
+                            </ul>
+                            
+                            <h3 class="text-xl font-bold text-pink-800 mb-3">🕐 Opening Hours & Tickets</h3>
+                            <div class="pink-card p-4 rounded-lg mb-4">
+                                <p class="text-pink-700"><strong>Hours:</strong> Tuesday-Sunday, 8:00 AM - 4:00 PM</p>
+                                <p class="text-pink-700"><strong>Closed:</strong> Mondays</p>
+                                <p class="text-pink-700"><strong>Ticket:</strong> $2 for adults, $1 for children</p>
+                                <p class="text-pink-700"><strong>Elevator:</strong> Additional $1.50</p>
+                            </div>
+                            
+                            <h2 class="text-2xl font-bold text-pink-800 mb-4">🍜 Nearby Food Recommendations</h2>
+                            <div class="food-grid">
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🍲</span>
+                                    <h4 class="font-bold text-pink-800">Soto Betawi</h4>
+                                    <p class="text-pink-600 text-sm">Traditional Jakarta soup at nearby warungs</p>
+                                </div>
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🥟</span>
+                                    <h4 class="font-bold text-pink-800">Kerak Telor</h4>
+                                    <p class="text-pink-600 text-sm">Street vendors around Merdeka Square</p>
+                                </div>
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🍹</span>
+                                    <h4 class="font-bold text-pink-800">Es Campur</h4>
+                                    <p class="text-pink-600 text-sm">Refreshing mixed ice dessert</p>
+                                </div>
+                            </div>
+                            
+                            <h2 class="text-2xl font-bold text-pink-800 mb-4">🚗 How to Get There</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🚇 By TransJakarta</h4>
+                                    <p class="text-pink-600 text-sm">Take bus to Monas/Balai Kota stop</p>
+                                </div>
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🚗 By Car/Taxi</h4>
+                                    <p class="text-pink-600 text-sm">Parking available around Merdeka Square</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            'kuta-beach': {
+                title: '🌅 Kuta Beach',
+                content: `
+                    <div class="space-y-6">
+                        <div class="text-center mb-8">
+                            <span class="text-8xl">🏖️</span>
+                            <h1 class="text-3xl font-bold text-pink-800 mt-4">Kuta Beach</h1>
+                            <p class="text-pink-600 mt-2">📍 Kuta, Bali, Indonesia</p>
+                            <div class="flex justify-center items-center mt-4">
+                                <span class="text-yellow-400 text-2xl">⭐⭐⭐⭐⭐</span>
+                                <span class="ml-2 text-pink-600 font-semibold">4.7/5</span>
+                            </div>
+                        </div>
+                        
+                        <div class="prose max-w-none">
+                            <h2 class="text-2xl font-bold text-pink-800 mb-4">🏄 About Kuta Beach</h2>
+                            <p class="text-pink-700 mb-4">Kuta Beach is one of Bali's most famous beaches, known for its golden sand, consistent waves perfect for surfing, and spectacular sunsets. It's a vibrant area with plenty of restaurants, bars, and shops.</p>
+                            
+                            <h3 class="text-xl font-bold text-pink-800 mb-3">🌊 Activities</h3>
+                            <ul class="list-disc list-inside text-pink-700 mb-4 space-y-2">
+                                <li>Surfing lessons for beginners and pros</li>
+                                <li>Sunset watching from the beach</li>
+                                <li>Beach volleyball and football</li>
+                                <li>Parasailing and jet skiing</li>
+                                <li>Beach massage and spa treatments</li>
+                                <li>Shopping at nearby markets</li>
+                            </ul>
+                            
+                            <h3 class="text-xl font-bold text-pink-800 mb-3">🌅 Best Times to Visit</h3>
+                            <div class="pink-card p-4 rounded-lg mb-4">
+                                <p class="text-pink-700"><strong>Sunrise:</strong> 6:00 AM - 7:00 AM</p>
+                                <p class="text-pink-700"><strong>Sunset:</strong> 6:00 PM - 7:00 PM</p>
+                                <p class="text-pink-700"><strong>Best Surfing:</strong> Early morning (6-9 AM)</p>
+                                <p class="text-pink-700"><strong>Less Crowded:</strong> Weekday mornings</p>
+                            </div>
+                            
+                            <h2 class="text-2xl font-bold text-pink-800 mb-4">🍜 Must-Try Balinese Food</h2>
+                            <div class="food-grid">
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🍛</span>
+                                    <h4 class="font-bold text-pink-800">Nasi Goreng</h4>
+                                    <p class="text-pink-600 text-sm">Indonesian fried rice with sweet soy sauce</p>
+                                </div>
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🐷</span>
+                                    <h4 class="font-bold text-pink-800">Babi Guling</h4>
+                                    <p class="text-pink-600 text-sm">Balinese roasted pork with spices</p>
+                                </div>
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🍢</span>
+                                    <h4 class="font-bold text-pink-800">Satay Lilit</h4>
+                                    <p class="text-pink-600 text-sm">Minced meat satay wrapped around bamboo</p>
+                                </div>
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🥥</span>
+                                    <h4 class="font-bold text-pink-800">Es Kelapa Muda</h4>
+                                    <p class="text-pink-600 text-sm">Fresh young coconut water</p>
+                                </div>
+                            </div>
+                            
+                            <h2 class="text-2xl font-bold text-pink-800 mb-4">🏨 Nearby Attractions</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🛍️ Beachwalk Shopping Center</h4>
+                                    <p class="text-pink-600 text-sm">Modern mall with ocean views</p>
+                                </div>
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🎭 Kuta Art Market</h4>
+                                    <p class="text-pink-600 text-sm">Local handicrafts and souvenirs</p>
+                                </div>
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🌊 Waterbom Bali</h4>
+                                    <p class="text-pink-600 text-sm">Water park with thrilling slides</p>
+                                </div>
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">✈️ Ngurah Rai Airport</h4>
+                                    <p class="text-pink-600 text-sm">Just 10 minutes away</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            'tangkuban-perahu': {
+                title: '⛰️ Tangkuban Perahu',
+                content: `
+                    <div class="space-y-6">
+                        <div class="text-center mb-8">
+                            <span class="text-8xl">🌿</span>
+                            <h1 class="text-3xl font-bold text-pink-800 mt-4">Tangkuban Perahu</h1>
+                            <p class="text-pink-600 mt-2">📍 Lembang, West Java, Indonesia</p>
+                            <div class="flex justify-center items-center mt-4">
+                                <span class="text-yellow-400 text-2xl">⭐⭐⭐⭐⭐</span>
+                                <span class="ml-2 text-pink-600 font-semibold">4.6/5</span>
+                            </div>
+                        </div>
+                        
+                        <div class="prose max-w-none">
+                            <h2 class="text-2xl font-bold text-pink-800 mb-4">🌋 About Tangkuban Perahu</h2>
+                            <p class="text-pink-700 mb-4">Tangkuban Perahu is an active stratovolcano located about 30 km north of Bandung. The name means "upturned boat" in Sundanese, referring to the shape of the volcanic crater. It's famous for its accessible crater and hot springs.</p>
+                            
+                            <h3 class="text-xl font-bold text-pink-800 mb-3">🎯 What to See & Do</h3>
+                            <ul class="list-disc list-inside text-pink-700 mb-4 space-y-2">
+                                <li>Visit Kawah Ratu (Queen Crater) - the main crater</li>
+                                <li>Explore Kawah Domas with natural hot springs</li>
+                                <li>Hike to Kawah Upas for a more challenging trek</li>
+                                <li>Buy local souvenirs and volcanic stones</li>
+                                <li>Enjoy the cool mountain air and pine forests</li>
+                                <li>Take photos with the volcanic landscape</li>
+                            </ul>
+                            
+                            <h3 class="text-xl font-bold text-pink-800 mb-3">🎫 Visitor Information</h3>
+                            <div class="pink-card p-4 rounded-lg mb-4">
+                                <p class="text-pink-700"><strong>Hours:</strong> 7:00 AM - 5:00 PM daily</p>
+                                <p class="text-pink-700"><strong>Entrance Fee:</strong> $3 for adults, $2 for children</p>
+                                <p class="text-pink-700"><strong>Parking:</strong> $1 for cars, $0.50 for motorcycles</p>
+                                <p class="text-pink-700"><strong>Temperature:</strong> 17-20°C (cool weather)</p>
+                            </div>
+                            
+                            <h2 class="text-2xl font-bold text-pink-800 mb-4">🍜 Local Bandung Specialties</h2>
+                            <div class="food-grid">
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🥟</span>
+                                    <h4 class="font-bold text-pink-800">Batagor</h4>
+                                    <p class="text-pink-600 text-sm">Fried fish dumplings with peanut sauce</p>
+                                </div>
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🍲</span>
+                                    <h4 class="font-bold text-pink-800">Soto Bandung</h4>
+                                    <p class="text-pink-600 text-sm">Clear beef soup with radish</p>
+                                </div>
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">🌽</span>
+                                    <h4 class="font-bold text-pink-800">Jagung Bakar</h4>
+                                    <p class="text-pink-600 text-sm">Grilled corn with butter and spices</p>
+                                </div>
+                                <div class="food-card">
+                                    <span class="text-4xl mb-2 block">☕</span>
+                                    <h4 class="font-bold text-pink-800">Kopi Luwak</h4>
+                                    <p class="text-pink-600 text-sm">Famous Indonesian coffee</p>
+                                </div>
+                            </div>
+                            
+                            <h2 class="text-2xl font-bold text-pink-800 mb-4">🚗 Getting There & Tips</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🚗 By Car</h4>
+                                    <p class="text-pink-600 text-sm">1 hour drive from Bandung city center</p>
+                                </div>
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🚌 By Tour</h4>
+                                    <p class="text-pink-600 text-sm">Many day tours available from Bandung</p>
+                                </div>
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">🧥 What to Bring</h4>
+                                    <p class="text-pink-600 text-sm">Warm clothes, comfortable shoes, camera</p>
+                                </div>
+                                <div class="pink-card p-4 rounded-lg">
+                                    <h4 class="font-bold text-pink-800 mb-2">⚠️ Safety Tips</h4>
+                                    <p class="text-pink-600 text-sm">Stay on marked paths, avoid crater edges</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            }
+        };
+
+        // Initialize SDKs
+        async function initializeSDKs() {
+            try {
+                // Initialize Data SDK
+                if (window.dataSdk) {
+                    const initResult = await window.dataSdk.init(dataHandler);
+                    if (!initResult.isOk) {
+                        console.error('Failed to initialize Data SDK');
+                    }
+                }
+
+                // Initialize Element SDK
+                if (window.elementSdk) {
+                    await window.elementSdk.init({
+                        defaultConfig,
+                        onConfigChange: async (config) => {
+                            // Update site title
+                            const siteTitle = document.getElementById('site-title');
+                            if (siteTitle) {
+                                siteTitle.textContent = config.site_title || defaultConfig.site_title;
+                            }
+
+                            // Update hero section
+                            const heroTitle = document.getElementById('hero-title');
+                            if (heroTitle) {
+                                heroTitle.textContent = config.hero_title || defaultConfig.hero_title;
+                            }
+
+                            const heroSubtitle = document.getElementById('hero-subtitle');
+                            if (heroSubtitle) {
+                                heroSubtitle.textContent = config.hero_subtitle || defaultConfig.hero_subtitle;
+                            }
+
+                            // Update contact title
+                            const contactTitle = document.getElementById('contact-title');
+                            if (contactTitle) {
+                                contactTitle.textContent = config.contact_title || defaultConfig.contact_title;
+                            }
+
+                            // Apply colors
+                            document.body.style.backgroundColor = config.background_color || defaultConfig.background_color;
+                            document.body.style.color = config.text_color || defaultConfig.text_color;
+
+                            // Update primary action buttons
+                            const primaryButtons = document.querySelectorAll('.bg-pink-500');
+                            primaryButtons.forEach(btn => {
+                                btn.style.backgroundColor = config.primary_action_color || defaultConfig.primary_action_color;
+                            });
+
+                            // Update surface colors
+                            const surfaces = document.querySelectorAll('.bg-white');
+                            surfaces.forEach(surface => {
+                                surface.style.backgroundColor = config.surface_color || defaultConfig.surface_color;
+                            });
+                        },
+                        mapToCapabilities: (config) => ({
+                            recolorables: [
+                                {
+                                    get: () => config.background_color || defaultConfig.background_color,
+                                    set: (value) => {
+                                        window.elementSdk.setConfig({ background_color: value });
+                                    }
+                                },
+                                {
+                                    get: () => config.surface_color || defaultConfig.surface_color,
+                                    set: (value) => {
+                                        window.elementSdk.setConfig({ surface_color: value });
+                                    }
+                                },
+                                {
+                                    get: () => config.text_color || defaultConfig.text_color,
+                                    set: (value) => {
+                                        window.elementSdk.setConfig({ text_color: value });
+                                    }
+                                },
+                                {
+                                    get: () => config.primary_action_color || defaultConfig.primary_action_color,
+                                    set: (value) => {
+                                        window.elementSdk.setConfig({ primary_action_color: value });
+                                    }
+                                },
+                                {
+                                    get: () => config.secondary_action_color || defaultConfig.secondary_action_color,
+                                    set: (value) => {
+                                        window.elementSdk.setConfig({ secondary_action_color: value });
+                                    }
+                                }
+                            ],
+                            borderables: [],
+                            fontEditable: undefined,
+                            fontSizeable: undefined
+                        }),
+                        mapToEditPanelValues: (config) => new Map([
+                            ["site_title", config.site_title || defaultConfig.site_title],
+                            ["hero_title", config.hero_title || defaultConfig.hero_title],
+                            ["hero_subtitle", config.hero_subtitle || defaultConfig.hero_subtitle],
+                            ["contact_title", config.contact_title || defaultConfig.contact_title]
+                        ])
+                    });
+                }
+            } catch (error) {
+                console.error('SDK initialization error:', error);
+            }
+        }
+
+        // Blog and destination functions
+        function openBlogPost(postId) {
+            const modal = document.getElementById('blog-modal');
+            const title = document.getElementById('blog-modal-title');
+            const content = document.getElementById('blog-modal-content');
+            
+            if (blogPosts[postId]) {
+                title.textContent = blogPosts[postId].title;
+                content.innerHTML = blogPosts[postId].content;
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeBlogPost() {
+            const modal = document.getElementById('blog-modal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function openDestination(destId) {
+            const modal = document.getElementById('destination-modal');
+            const title = document.getElementById('destination-modal-title');
+            const content = document.getElementById('destination-modal-content');
+            
+            if (destinations[destId]) {
+                title.textContent = destinations[destId].title;
+                content.innerHTML = destinations[destId].content;
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeDestination() {
+            const modal = document.getElementById('destination-modal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSDKs();
+            initializeEventListeners();
+            initializeAnimations();
+            initializeCarousel();
+            initializeCounters();
+            createFloatingHearts();
+            updateBudgetTotal();
+        });
+
+        function initializeEventListeners() {
+            // Mobile menu toggle
+            const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuToggle && mobileMenu) {
+                mobileMenuToggle.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+
+            // Dark mode toggle
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            if (darkModeToggle) {
+                darkModeToggle.addEventListener('click', toggleDarkMode);
+            }
+
+            // Language switcher
+            const languageSwitcher = document.getElementById('language-switcher');
+            if (languageSwitcher) {
+                languageSwitcher.addEventListener('change', (e) => {
+                    currentLanguage = e.target.value;
+                    updateLanguage();
+                });
+            }
+
+            // Filter buttons
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const filter = e.target.dataset.filter;
+                    filterDestinations(filter);
+                    
+                    // Update active button
+                    filterButtons.forEach(b => b.classList.remove('active', 'bg-pink-500', 'text-white'));
+                    e.target.classList.add('active', 'bg-pink-500', 'text-white');
+                });
+            });
+
+            // Trip planner form
+            const tripPlannerForm = document.getElementById('trip-planner-form');
+            if (tripPlannerForm) {
+                tripPlannerForm.addEventListener('submit', handleTripPlannerSubmit);
+            }
+
+            // Budget calculator buttons
+            const budgetButtons = document.querySelectorAll('.budget-btn');
+            budgetButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const category = e.target.dataset.category;
+                    const amount = parseInt(e.target.dataset.amount);
+                    updateBudget(category, amount);
+                });
+            });
+
+            // Contact form
+            const contactForm = document.getElementById('contact-form');
+            if (contactForm) {
+                contactForm.addEventListener('submit', handleContactSubmit);
+            }
+
+            // Feedback form
+            const feedbackForm = document.getElementById('feedback-form');
+            if (feedbackForm) {
+                feedbackForm.addEventListener('submit', handleFeedbackSubmit);
+            }
+
+            // Rating stars
+            const stars = document.querySelectorAll('.star');
+            stars.forEach(star => {
+                star.addEventListener('click', (e) => {
+                    const rating = parseInt(e.target.dataset.rating);
+                    setRating(rating);
+                });
+            });
+
+            // Newsletter form
+            const newsletterForm = document.getElementById('newsletter-form');
+            if (newsletterForm) {
+                newsletterForm.addEventListener('submit', handleNewsletterSubmit);
+            }
+
+            // Social share buttons
+            const socialButtons = document.querySelectorAll('.social-share');
+            socialButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const platform = e.currentTarget.dataset.platform;
+                    shareToSocial(platform);
+                });
+            });
+
+            // Chatbot
+            const chatbotToggle = document.getElementById('chatbot-toggle');
+            const chatbotWindow = document.getElementById('chatbot-window');
+            const chatbotClose = document.getElementById('chatbot-close');
+            const chatbotForm = document.getElementById('chatbot-form');
+
+            if (chatbotToggle && chatbotWindow) {
+                chatbotToggle.addEventListener('click', () => {
+                    chatbotWindow.style.display = chatbotWindow.style.display === 'block' ? 'none' : 'block';
+                });
+            }
+
+            if (chatbotClose && chatbotWindow) {
+                chatbotClose.addEventListener('click', () => {
+                    chatbotWindow.style.display = 'none';
+                });
+            }
+
+            if (chatbotForm) {
+                chatbotForm.addEventListener('submit', handleChatbotMessage);
+            }
+
+            // Modal close on outside click
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                        document.body.style.overflow = 'auto';
+                    }
+                });
+            });
+
+            // Smooth scrolling for navigation links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        }
+
+        function createFloatingHearts() {
+            const heartsContainer = document.getElementById('floating-hearts');
+            
+            setInterval(() => {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                heart.textContent = '💕';
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.animationDuration = (Math.random() * 3 + 3) + 's';
+                
+                heartsContainer.appendChild(heart);
+                
+                setTimeout(() => {
+                    heart.remove();
+                }, 6000);
+            }, 2000);
+        }
+
+        function updateBudget(category, amount) {
+            budgetAmounts[category] = Math.max(0, budgetAmounts[category] + amount);
+            document.getElementById(category + '-amount').textContent = '$' + budgetAmounts[category];
+            updateBudgetTotal();
+        }
+
+        function updateBudgetTotal() {
+            const total = Object.values(budgetAmounts).reduce((sum, amount) => sum + amount, 0);
+            document.getElementById('total-budget').textContent = '$' + total;
+        }
+
+        async function handleTripPlannerSubmit(e) {
+            e.preventDefault();
+            
+            if (allData.length >= 999) {
+                showToast('Maximum limit of 999 trip plans reached. Please try again later.', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('plan-trip-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '🎯 Creating Itinerary...';
+            submitBtn.disabled = true;
+
+            const formData = new FormData(e.target);
+            const tripData = {
+                id: Date.now().toString(),
+                name: 'Trip Plan',
+                destination: formData.get('destination'),
+                booking_date: formData.get('booking_date'),
+                guests: parseInt(formData.get('guests')),
+                budget: formData.get('budget'),
+                travel_style: formData.get('travel_style'),
+                date: new Date().toISOString(),
+                type: 'trip_plan'
+            };
+
+            try {
+                if (window.dataSdk) {
+                    const result = await window.dataSdk.create(tripData);
+                    if (result.isOk) {
+                        showToast('🎉 Your personalized itinerary has been created! Check your email for details.', 'success');
+                        e.target.reset();
+                    } else {
+                        showToast('Failed to create trip plan. Please try again.', 'error');
+                    }
+                } else {
+                    showToast('🎉 Your personalized itinerary has been created! Check your email for details.', 'success');
+                    e.target.reset();
+                }
+            } catch (error) {
+                showToast('An error occurred. Please try again.', 'error');
+            } finally {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        function initializeAnimations() {
+            // Intersection Observer for fade-in animations
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            });
+
+            document.querySelectorAll('.fade-in').forEach(el => {
+                observer.observe(el);
+            });
+        }
+
+        function initializeCarousel() {
+            const track = document.getElementById('testimonial-track');
+            const prevBtn = document.getElementById('prev-testimonial');
+            const nextBtn = document.getElementById('next-testimonial');
+            const slides = document.querySelectorAll('.carousel-slide');
+
+            if (!track || !prevBtn || !nextBtn || slides.length === 0) return;
+
+            function updateCarousel() {
+                const translateX = -currentTestimonial * 100;
+                track.style.transform = `translateX(${translateX}%)`;
+            }
+
+            prevBtn.addEventListener('click', () => {
+                currentTestimonial = currentTestimonial > 0 ? currentTestimonial - 1 : slides.length - 1;
+                updateCarousel();
+            });
+
+            nextBtn.addEventListener('click', () => {
+                currentTestimonial = currentTestimonial < slides.length - 1 ? currentTestimonial + 1 : 0;
+                updateCarousel();
+            });
+
+            // Auto-advance carousel
+            setInterval(() => {
+                currentTestimonial = currentTestimonial < slides.length - 1 ? currentTestimonial + 1 : 0;
+                updateCarousel();
+            }, 5000);
+        }
+
+        function initializeCounters() {
+            const counters = document.querySelectorAll('.counter');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const counter = entry.target;
+                        const target = parseInt(counter.dataset.target);
+                        animateCounter(counter, target);
+                        observer.unobserve(counter);
+                    }
+                });
+            });
+
+            counters.forEach(counter => observer.observe(counter));
+        }
+
+        function animateCounter(element, target) {
+            let current = 0;
+            const increment = target / 100;
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                element.textContent = Math.floor(current).toLocaleString();
+            }, 20);
+        }
+
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            
+            const toggle = document.getElementById('dark-mode-toggle');
+            if (toggle) {
+                toggle.innerHTML = isDarkMode ? '<span class="text-2xl">☀️</span>' : '<span class="text-2xl">🌙</span>';
+            }
+        }
+
+        function updateLanguage() {
+            // This would typically fetch translations from a language file
+            // For demo purposes, we'll just show the concept
+            if (currentLanguage === 'id') {
+                showToast('🇮🇩 Beralih ke Bahasa Indonesia', 'info');
+            } else {
+                showToast('🇺🇸 Switching to English', 'info');
+            }
+        }
+
+        function filterDestinations(filter) {
+            const cards = document.querySelectorAll('.destination-card');
+            cards.forEach(card => {
+                if (filter === 'all' || card.dataset.category === filter) {
+                    card.style.display = 'block';
+                    card.classList.add('fade-in');
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        async function handleContactSubmit(e) {
+            e.preventDefault();
+            
+            if (allData.length >= 999) {
+                showToast('Maximum limit of 999 contacts reached. Please try again later.', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submit-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '💌 Sending...';
+            submitBtn.disabled = true;
+
+            const formData = new FormData(e.target);
+            const contactData = {
+                id: Date.now().toString(),
+                name: formData.get('name'),
+                email: formData.get('email'),
+                destination: formData.get('destination'),
+                message: formData.get('message'),
+                date: new Date().toISOString(),
+                type: 'contact'
+            };
+
+            try {
+                if (window.dataSdk) {
+                    const result = await window.dataSdk.create(contactData);
+                    if (result.isOk) {
+                        showToast('💌 Message sent successfully! We\'ll get back to you soon.', 'success');
+                        e.target.reset();
+                    } else {
+                        showToast('Failed to send message. Please try again.', 'error');
+                    }
+                } else {
+                    showToast('💌 Message sent successfully! We\'ll get back to you soon.', 'success');
+                    e.target.reset();
+                }
+            } catch (error) {
+                showToast('An error occurred. Please try again.', 'error');
+            } finally {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        async function handleFeedbackSubmit(e) {
+            e.preventDefault();
+            
+            if (currentRating === 0) {
+                showToast('Please select a rating before submitting.', 'error');
+                return;
+            }
+
+            if (allData.length >= 999) {
+                showToast('Maximum limit of 999 feedback entries reached. Please try again later.', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('feedback-submit-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '✨ Submitting...';
+            submitBtn.disabled = true;
+
+            const formData = new FormData(e.target);
+            const feedbackData = {
+                id: Date.now().toString(),
+                name: formData.get('name'),
+                destination: formData.get('destination'),
+                rating: currentRating,
+                message: formData.get('message'),
+                date: new Date().toISOString(),
+                type: 'feedback'
+            };
+
+            try {
+                if (window.dataSdk) {
+                    const result = await window.dataSdk.create(feedbackData);
+                    if (result.isOk) {
+                        showToast('✨ Thank you for your feedback! It helps us improve Eel\'s Map.', 'success');
+                        e.target.reset();
+                        setRating(0);
+                    } else {
+                        showToast('Failed to submit feedback. Please try again.', 'error');
+                    }
+                } else {
+                    showToast('✨ Thank you for your feedback! It helps us improve Eel\'s Map.', 'success');
+                    e.target.reset();
+                    setRating(0);
+                }
+            } catch (error) {
+                showToast('An error occurred. Please try again.', 'error');
+            } finally {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        function handleNewsletterSubmit(e) {
+            e.preventDefault();
+            const email = e.target.querySelector('input[type="email"]').value;
+            showToast('💌 Successfully subscribed to Eel\'s newsletter!', 'success');
+            e.target.reset();
+        }
+
+        function handleChatbotMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('chatbot-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            const messagesContainer = document.getElementById('chatbot-messages');
+            
+            // Add user message
+            const userMessage = document.createElement('div');
+            userMessage.className = 'bg-pink-500 text-white rounded-lg p-3 mb-3 ml-8';
+            userMessage.innerHTML = `<p class="text-sm">${message}</p>`;
+            messagesContainer.appendChild(userMessage);
+
+            // Add bot response
+            setTimeout(() => {
+                const botMessage = document.createElement('div');
+                botMessage.className = 'bg-pink-100 rounded-lg p-3 mb-3';
+                botMessage.innerHTML = `<p class="text-sm text-pink-800">🌸 Thanks for asking about "${message}"! I recommend visiting during the dry season (April-October) for the best experience. Would you like specific tips for Jakarta, Bali, or Bandung?</p>`;
+                messagesContainer.appendChild(botMessage);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, 1000);
+
+            input.value = '';
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function setRating(rating) {
+            currentRating = rating;
+            const stars = document.querySelectorAll('.star');
+            const ratingValue = document.getElementById('rating-value');
+            
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.remove('text-gray-300');
+                    star.classList.add('text-yellow-400');
+                } else {
+                    star.classList.remove('text-yellow-400');
+                    star.classList.add('text-gray-300');
+                }
+            });
+            
+            if (ratingValue) {
+                ratingValue.value = rating;
+            }
+        }
+
+        function shareToSocial(platform) {
+            const url = window.location.href;
+            const text = '🗺️ Check out Eel\'s Map - Your gateway to discovering amazing Indonesian destinations! 🏝️';
+            
+            let shareUrl = '';
+            switch (platform) {
+                case 'facebook':
+                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+                    break;
+                case 'twitter':
+                    shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+                    break;
+                case 'instagram':
+                    showToast('📷 Please share manually on Instagram!', 'info');
+                    return;
+                case 'youtube':
+                    showToast('📺 Visit our YouTube channel for travel videos!', 'info');
+                    return;
+            }
+            
+            if (shareUrl) {
+                window.open(shareUrl, '_blank', 'noopener,noreferrer');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white z-50 transition-all duration-300 transform translate-x-full shadow-lg`;
+            
+            switch (type) {
+                case 'success':
+                    toast.classList.add('bg-green-500');
+                    break;
+                case 'error':
+                    toast.classList.add('bg-red-500');
+                    break;
+                case 'info':
+                default:
+                    toast.classList.add('bg-pink-500');
+                    break;
+            }
+            
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Remove after 4 seconds
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 4000);
+        }
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('nav');
+            if (window.scrollY > 100) {
+                navbar.classList.add('bg-white/95', 'backdrop-blur-sm');
+            } else {
+                navbar.classList.remove('bg-white/95', 'backdrop-blur-sm');
+            }
+        });
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99f4e7860362e789',t:'MTc2MzI3NDI1Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
